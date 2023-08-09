@@ -62,9 +62,6 @@ class Ingredient(models.Model):
         ordering = ["name"]
 
 
-
-
-
 class Recipe(CreatedModel):
     """Модель для рецептов.
 
@@ -77,7 +74,8 @@ class Recipe(CreatedModel):
     ingridients - Ингредиенты: продукты для приготовления блюда по рецепту.
     Множественное поле, выбор из предустановленного списка,
     с указанием количества и единицы измерения.
-    tags - Теги (можно установить несколько тегов на один рецепт, выбор из предустановленных).
+    tags - Теги (можно установить несколько тегов на один рецепт, 
+    выбор из предустановленных).
     time - Время приготовления в минутах.
     """
 
@@ -149,6 +147,7 @@ class IngredientsInRecipe(models.Model):
 
     def __str__(self):
         return f"{self.ingredient.name}: {self.amount}"
+
 
 class ShoppingCart(CreatedModel):
     """Модель для корзины.
