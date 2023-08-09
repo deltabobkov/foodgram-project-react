@@ -26,26 +26,25 @@ class IngredientAdmin(admin.ModelAdmin):
     empty_value_display = "-пусто-"
 
 
-class IngredientsInRecipeAdmin(admin.ModelAdmin):
-    list_display = ("pk", "recipe", "ingredient", "amount")
-    list_editable = ("recipe", "ingredient")
-    empty_value_display = "-пусто-"
-
-
 class RecipeAdmin(admin.ModelAdmin):
-    list_display = ("pk", "title", "author", "text", "tags", "favorites")
+    list_display = ("pk", "title", "author", "description", "favorites")
     search_fields = (
         "author__username",
         "title",
-        "tags__name",
         "author__email",
     )
-    list_editable = ("title", "text")
-    list_filter = ("title", "author__username", "tags__name")
+    list_editable = ("title", "description")
+    list_filter = ("title", "author", "tags")
     empty_value_display = "-пусто-"
 
     def favorites(self, obj):
         return obj.favorites.count()
+
+
+class IngredientsInRecipeAdmin(admin.ModelAdmin):
+    list_display = ("pk", "recipe", "ingredient", "amount")
+    list_editable = ("recipe", "ingredient")
+    empty_value_display = "-пусто-"
 
 
 class ShoppingCartAdmin(admin.ModelAdmin):

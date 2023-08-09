@@ -8,6 +8,7 @@ from recipes.models import (
     ShoppingCart,
     Tag,
 )
+from django.shortcuts import get_object_or_404
 from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
 from users.models import Subscribe, User
@@ -148,9 +149,59 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
             "time",
         )
 
+    def validate_ingredients(self, value):
+        ingredients = value
+
+        if not ingredients:
+            raise ValidationError({
+                'ingredients': 'Необходим хотя бы один ингридиент.'
+            })
+
+        ingredients_list = []
+
+        for item in ingredients:
+            ingredient = get_object_or_404(Ingredient, id=item['id'])
+            if ingredient in ingredients_list:
+                raise ValidationError({
+                    'ingredients': 'Ингредиенты должны быть уникальными.'
+                })
+            if int(item['amount']) < 1:
+                raise ValidationError({
+                    'amount': 'Минимальное количество ингредиента - 1.'
+                })
+            ingredients_list.append(ingredient)
+        return value
+
+    def validate_tags(self, value):
+        tags = value
+
+        if not tags:
+            raise ValidationError({
+                'tags': 'Выберите минимум 1 тег.'
+            })
+
+        tags_list = []
+
+        for tag in tags:
+            if tag in tags_list:
+                raise ValidationError({
+                    'tags': 'Повторный тег.'
+                })
+            tags_list.append(tag)
+        return value
+
+    def validate_time(self, value):
+        time = value
+
+        if time < 1:
+            raise ValidationError({
+                'time': 'Минимальное время - 1 минута'
+            })
+        return value
+
     def create(self, validated_data):
-        tags = validated_data.pop("tags")
-        ingredients = validated_data.pop("ingredients")
+        tags = validated_data.pop('tags')
+        ingredients = validated_data.pop('ingredients')
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags)
         IngredientsInRecipe.objects.bulk_create(

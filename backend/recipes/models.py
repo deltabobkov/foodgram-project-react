@@ -62,26 +62,7 @@ class Ingredient(models.Model):
         ordering = ["name"]
 
 
-class IngredientsInRecipe(models.Model):
-    """Модель ингридиентов в рецепте.
 
-    Описывается следующими полями:
-
-    ingredient - Ингридиент из модели ингридиентов.
-    amount - количество ингридиента.
-    """
-
-    ingredient = models.ForeignKey(
-        Ingredient,
-        on_delete=models.CASCADE,
-        related_name="ingridientsinrecipe",
-    )
-    amount = models.PositiveIntegerField(
-        validators=[MinValueValidator(1)],
-    )
-
-    def __str__(self):
-        return f"{self.ingredient.name}: {self.amount}"
 
 
 class Recipe(CreatedModel):
@@ -119,10 +100,13 @@ class Recipe(CreatedModel):
         "Описание рецепта",
     )
     ingredients = models.ManyToManyField(
-        "Ingredient",
+        Ingredient,
+        related_name='recipes',
+        verbose_name='Ингредиенты',
+        through='IngredientsInRecipe'
     )
     tags = models.ManyToManyField(
-        "Tags",
+        Tag,
         verbose_name="Теги",
         related_name="recipes",
     )
@@ -138,6 +122,33 @@ class Recipe(CreatedModel):
     def __str__(self):
         return self.title
 
+
+class IngredientsInRecipe(models.Model):
+    """Модель ингридиентов в рецепте.
+
+    Описывается следующими полями:
+
+    ingredient - Ингридиент из модели ингридиентов.
+    amount - количество ингридиента.
+    """
+    recipe = models.ForeignKey(
+        Recipe,
+        on_delete=models.CASCADE,
+        related_name='recipeingredient',
+        verbose_name='Рецепт'
+    )
+
+    ingredient = models.ForeignKey(
+        Ingredient,
+        on_delete=models.CASCADE,
+        related_name="ingridientsinrecipe",
+    )
+    amount = models.PositiveIntegerField(
+        validators=[MinValueValidator(1)],
+    )
+
+    def __str__(self):
+        return f"{self.ingredient.name}: {self.amount}"
 
 class ShoppingCart(CreatedModel):
     """Модель для корзины.
