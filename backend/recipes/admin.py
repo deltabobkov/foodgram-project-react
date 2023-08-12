@@ -1,8 +1,14 @@
 from django.contrib import admin
 
 from .models import (
-    Favorite, Ingredient, IngredientsInRecipe, Recipe, ShoppingCart, Tag,
+    Favorite,
+    Ingredient,
+    IngredientsInRecipe,
+    Recipe,
+    ShoppingCart,
+    Tag,
 )
+
 
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
@@ -12,6 +18,7 @@ class TagAdmin(admin.ModelAdmin):
     list_filter = ("name", "color", "slug")
     empty_value_display = "-пусто-"
 
+
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
     list_display = ("pk", "name", "units")
@@ -19,6 +26,7 @@ class IngredientAdmin(admin.ModelAdmin):
     list_editable = ("name",)
     list_filter = ("name",)
     empty_value_display = "-пусто-"
+
 
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
@@ -34,11 +42,14 @@ class RecipeAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
-        queryset = queryset.select_related("author").prefetch_related("tags","ingredients")
+        queryset = queryset.select_related("author").prefetch_related(
+            "tags", "ingredients"
+        )
         return queryset
 
     def favorites(self, obj):
         return obj.favorites.count()
+
 
 @admin.register(IngredientsInRecipe)
 class IngredientsInRecipeAdmin(admin.ModelAdmin):
@@ -46,12 +57,14 @@ class IngredientsInRecipeAdmin(admin.ModelAdmin):
     list_editable = ("recipe", "ingredient")
     empty_value_display = "-пусто-"
 
+
 @admin.register(ShoppingCart)
 class ShoppingCartAdmin(admin.ModelAdmin):
     list_display = ("pk", "user", "recipe")
     search_fields = ("user__username", "user__email", "recipe__name")
     list_editable = ("user", "recipe")
     empty_value_display = "-пусто-"
+
 
 @admin.register(Favorite)
 class FavoriteAdmin(admin.ModelAdmin):
@@ -64,4 +77,3 @@ class FavoriteAdmin(admin.ModelAdmin):
         queryset = super().get_queryset(request)
         queryset = queryset.select_related("user")
         return queryset
-    

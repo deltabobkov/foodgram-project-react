@@ -8,7 +8,7 @@ SECRET_KEY = os.getenv("SECRET_KEY", "key")
 DEBUG = os.getenv("DEBUG") == "True"
 
 HOSTS: str = os.getenv("HOSTS", "127.0.0.1, localhost")
-ALLOWED_HOSTS = HOSTS.split(',')
+ALLOWED_HOSTS = HOSTS.split(",")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -24,7 +24,6 @@ INSTALLED_APPS = [
     "users.apps.UsersConfig",
     "api.apps.ApiConfig",
     "recipes.apps.RecipesConfig",
-
 ]
 
 MIDDLEWARE = [
@@ -62,13 +61,15 @@ WSGI_APPLICATION = "foodgram.wsgi.application"
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': os.getenv('DB_ENGINE', default='django.db.backends.postgresql'),
-        'NAME': os.getenv('DB_NAME', default='NAME'),
-        'USER': os.getenv('POSTGRES_USER', default='USERNAME'),
-        'PASSWORD': os.getenv('POSTGRES_PASSWORD', default='PASSWORD'),
-        'HOST': os.getenv('DB_HOST', default='db'),
-        'PORT': os.getenv('DB_PORT', default=1234)
+    "default": {
+        "ENGINE": os.getenv(
+            "DB_ENGINE", default="django.db.backends.postgresql"
+        ),
+        "NAME": os.getenv("DB_NAME", default="NAME"),
+        "USER": os.getenv("POSTGRES_USER", default="USERNAME"),
+        "PASSWORD": os.getenv("POSTGRES_PASSWORD", default="PASSWORD"),
+        "HOST": os.getenv("DB_HOST", default="db"),
+        "PORT": os.getenv("DB_PORT", default=1234),
     }
 }
 
@@ -92,44 +93,40 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 REST_FRAMEWORK = {
-    'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',
+    "DEFAULT_PERMISSION_CLASSES": [
+        "rest_framework.permissions.AllowAny",
     ],
-
-    'DEFAULT_AUTHENTICATION_CLASSES': [
-        'rest_framework.authentication.TokenAuthentication',
+    "DEFAULT_AUTHENTICATION_CLASSES": [
+        "rest_framework.authentication.TokenAuthentication",
     ],
-    'DEFAULT_FILTER_BACKENDS': [
-        'django_filters.rest_framework.DjangoFilterBackend',
+    "DEFAULT_FILTER_BACKENDS": [
+        "django_filters.rest_framework.DjangoFilterBackend",
     ],
-    'DEFAULT_PAGINATION_CLASS': 'api.paginator.Paginator',
-    'SEARCH_PARAM': 'name',
-    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
-    'PAGE_SIZE': 6,
+    "DEFAULT_PAGINATION_CLASS": "rest_framework.pagination.PageNumberPagination",
+    "PAGE_SIZE": 6,
 }
 
 
 DJOSER = {
-    'SERIALIZERS': {
-        'user_create': 'api.serializers.CreateUserSerializer',
-        'user': 'api.serializers.UserSerializer',
-        'current_user': 'api.serializers.UserSerializer',
+    "SERIALIZERS": {
+        "user_create": "api.serializers.CreateUserSerializer",
+        "user": "api.serializers.UserSerializer",
+        "current_user": "api.serializers.UserSerializer",
     },
-
-    'PERMISSIONS': {
-        'user': ['djoser.permissions.CurrentUserOrAdminOrReadOnly'],
-        'user_list': ['rest_framework.permissions.IsAuthenticatedOrReadOnly'],
+    "PERMISSIONS": {
+        "user": ["djoser.permissions.CurrentUserOrAdminOrReadOnly"],
+        "user_list": ["rest_framework.permissions.IsAuthenticatedOrReadOnly"],
     },
-    'HIDE_USERS': False,
-    'LOGIN_FIELD': 'email',
+    "HIDE_USERS": False,
+    "LOGIN_FIELD": "email",
 }
 
-AUTH_USER_MODEL = 'users.User'
+AUTH_USER_MODEL = "users.User"
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.2/topics/i18n/
 
-LANGUAGE_CODE = 'ru'
+LANGUAGE_CODE = "ru"
 
 TIME_ZONE = "UTC"
 
@@ -142,10 +139,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.2/howto/static-files/
 
 STATIC_URL = "static/"
-STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+STATIC_ROOT = os.path.join(BASE_DIR, "static")
 
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = "/media/"
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field

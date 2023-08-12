@@ -1,7 +1,12 @@
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_base64.fields import Base64ImageField
 from recipes.models import (
-    Favorite, Ingredient, IngredientsInRecipe, Recipe, ShoppingCart, Tag,
+    Favorite,
+    Ingredient,
+    IngredientsInRecipe,
+    Recipe,
+    ShoppingCart,
+    Tag,
 )
 from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
@@ -50,12 +55,7 @@ class UserSerializer(UserSerializer):
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
-        fields = (
-            "id",
-            "name",
-            "slug",
-            "color"
-        )
+        fields = ("id", "name", "slug", "color")
 
 
 class IngredientSerializer(serializers.ModelSerializer):
@@ -73,10 +73,7 @@ class IngredientsInRecipeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = IngredientsInRecipe
-        fields = (
-            "id",
-            "amount"
-        )
+        fields = ("id", "amount")
 
 
 class RecipeSerializer(serializers.ModelSerializer):
@@ -161,22 +158,22 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
         ingredients = value
 
         if not ingredients:
-            raise ValidationError({
-                'ingredients': 'Необходим хотя бы один ингридиент.'
-            })
+            raise ValidationError(
+                {"ingredients": "Необходим хотя бы один ингридиент."}
+            )
 
         ingredients_list = []
 
         for item in ingredients:
-            ingredient = get_object_or_404(Ingredient, id=item['id'])
+            ingredient = get_object_or_404(Ingredient, id=item["id"])
             if ingredient in ingredients_list:
-                raise ValidationError({
-                    'ingredients': 'Ингредиенты должны быть уникальными.'
-                })
-            if int(item['amount']) < 1:
-                raise ValidationError({
-                    'amount': 'Минимальное количество ингредиента - 1.'
-                })
+                raise ValidationError(
+                    {"ingredients": "Ингредиенты должны быть уникальными."}
+                )
+            if int(item["amount"]) < 1:
+                raise ValidationError(
+                    {"amount": "Минимальное количество ингредиента - 1."}
+                )
             ingredients_list.append(ingredient)
         return value
 
@@ -184,17 +181,13 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
         tags = value
 
         if not tags:
-            raise ValidationError({
-                'tags': 'Выберите минимум 1 тег.'
-            })
+            raise ValidationError({"tags": "Выберите минимум 1 тег."})
 
         tags_list = []
 
         for tag in tags:
             if tag in tags_list:
-                raise ValidationError({
-                    'tags': 'Повторный тег.'
-                })
+                raise ValidationError({"tags": "Повторный тег."})
             tags_list.append(tag)
         return value
 
@@ -202,14 +195,12 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
         time = value
 
         if time < 1:
-            raise ValidationError({
-                'time': 'Минимальное время - 1 минута'
-            })
+            raise ValidationError({"time": "Минимальное время - 1 минута"})
         return value
 
     def create(self, validated_data):
-        tags = validated_data.pop('tags')
-        ingredients = validated_data.pop('ingredients')
+        tags = validated_data.pop("tags")
+        ingredients = validated_data.pop("ingredients")
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags)
         IngredientsInRecipe.objects.bulk_create(
@@ -274,7 +265,7 @@ class SubscriptionsSerializer(UserSerializer):
         if limit:
             recipes = recipes[: int(limit)]
         return RecipeSerializer(recipes, many=True).data
-    
+
     def get_recipes_count(self, obj):
         return obj.recipes.count()
 
