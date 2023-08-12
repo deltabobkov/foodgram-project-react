@@ -110,7 +110,9 @@ class Recipe(CreatedModel):
     )
     time = models.PositiveIntegerField(
         "Время приготовления",
+        validators=[MinValueValidator(1)],
     )
+
 
     class Meta:
         verbose_name = "Рецепт"
@@ -129,6 +131,7 @@ class IngredientsInRecipe(models.Model):
     ingredient - Ингридиент из модели ингридиентов.
     amount - количество ингридиента.
     """
+    
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,

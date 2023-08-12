@@ -1,19 +1,15 @@
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_base64.fields import Base64ImageField
 from recipes.models import (
-    Favorite,
-    Ingredient,
-    IngredientsInRecipe,
-    Recipe,
-    ShoppingCart,
-    Tag,
+    Favorite, Ingredient, IngredientsInRecipe, Recipe, ShoppingCart, Tag,
 )
-from django.shortcuts import get_object_or_404
 from rest_framework import serializers, status
 from rest_framework.exceptions import ValidationError
-from users.models import Subscribe, User
 
 from django.db.models import F
+from django.shortcuts import get_object_or_404
+
+from users.models import Subscribe, User
 
 
 class CreateUserSerializer(UserCreateSerializer):
@@ -54,13 +50,22 @@ class UserSerializer(UserSerializer):
 class TagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tag
-        fields = "__all__"
+        fields = (
+            "id",
+            "name",
+            "slug",
+            "color"
+        )
 
 
 class IngredientSerializer(serializers.ModelSerializer):
     class Meta:
         model = Ingredient
-        fields = "__all__"
+        fields = (
+            "id",
+            "name",
+            "units",
+        )
 
 
 class IngredientsInRecipeSerializer(serializers.ModelSerializer):
@@ -68,7 +73,10 @@ class IngredientsInRecipeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = IngredientsInRecipe
-        fields = ("id", "amount")
+        fields = (
+            "id",
+            "amount"
+        )
 
 
 class RecipeSerializer(serializers.ModelSerializer):
@@ -244,7 +252,7 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
 
 class SubscriptionsSerializer(UserSerializer):
     recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.ReadOnlyField(source="author.recipes.count")
+    recipes_count = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -266,6 +274,9 @@ class SubscriptionsSerializer(UserSerializer):
         if limit:
             recipes = recipes[: int(limit)]
         return RecipeSerializer(recipes, many=True).data
+    
+    def get_recipes_count(self, obj):
+        return obj.recipes.count()
 
     def validate(self, data):
         author = self.instance
