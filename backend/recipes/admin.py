@@ -57,6 +57,14 @@ class IngredientsInRecipeAdmin(admin.ModelAdmin):
     list_editable = ("recipe", "ingredient")
     empty_value_display = "-пусто-"
 
+    def get_queryset(self, request):
+        queryset = (
+            super().get_queryset(request)
+            .select_related('recipe')
+            .prefetch_related('ingredient')
+        )
+        return queryset
+
 
 @admin.register(ShoppingCart)
 class ShoppingCartAdmin(admin.ModelAdmin):
@@ -64,6 +72,13 @@ class ShoppingCartAdmin(admin.ModelAdmin):
     search_fields = ("user__username", "user__email", "recipe__name")
     list_editable = ("user", "recipe")
     empty_value_display = "-пусто-"
+
+    def get_queryset(self, request):
+        queryset = (
+            super().get_queryset(request)
+            .select_related('user')
+        )
+        return queryset
 
 
 @admin.register(Favorite)
