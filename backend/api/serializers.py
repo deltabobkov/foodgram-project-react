@@ -1,5 +1,11 @@
 from djoser.serializers import UserCreateSerializer, UserSerializer
 from drf_base64.fields import Base64ImageField
+from rest_framework import serializers, status
+from rest_framework.exceptions import ValidationError
+
+from django.db.models import F
+from django.shortcuts import get_object_or_404
+
 from recipes.models import (
     Favorite,
     Ingredient,
@@ -8,12 +14,6 @@ from recipes.models import (
     ShoppingCart,
     Tag,
 )
-from rest_framework import serializers, status
-from rest_framework.exceptions import ValidationError
-
-from django.db.models import F
-from django.shortcuts import get_object_or_404
-
 from users.models import Subscribe, User
 
 
@@ -265,9 +265,6 @@ class SubscriptionsSerializer(UserSerializer):
         if limit:
             recipes = recipes[: int(limit)]
         return RecipeSerializer(recipes, many=True).data
-
-    def get_recipes_count(self, obj):
-        return obj.recipes.count()
 
     def validate(self, data):
         author = self.instance

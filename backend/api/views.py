@@ -1,5 +1,15 @@
 from django_filters.rest_framework import DjangoFilterBackend
 from djoser.views import UserViewSet
+from rest_framework import status
+from rest_framework.decorators import action
+from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
+from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
+
+from django.db.models import Count, Sum
+from django.http import HttpResponse
+from django.shortcuts import get_object_or_404
+
 from recipes.models import (
     Favorite,
     Ingredient,
@@ -8,16 +18,6 @@ from recipes.models import (
     ShoppingCart,
     Tag,
 )
-from rest_framework import status
-from rest_framework.decorators import action
-from rest_framework.permissions import SAFE_METHODS, IsAuthenticated
-from rest_framework.response import Response
-from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
-
-from django.db.models import Sum
-from django.http import HttpResponse
-from django.shortcuts import get_object_or_404
-
 from users.models import Subscribe, User
 
 from .filters import RecipeFilter
@@ -46,8 +46,10 @@ class TagViewSet(ReadOnlyModelViewSet):
 
 
 class RecipeViewSet(ModelViewSet):
-    queryset = Recipe.objects.select_related("author").prefetch_related(
-        "tags", "ingredients"
+    queryset = (
+        Recipe.objects.select_related("author")
+        .prefetch_related("tags", "ingredients")
+        .annotate(recipes_count=Count("id"))
     )
     permission_classes = (IsOwnerOrAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
@@ -69,7 +71,7 @@ class RecipeViewSet(ModelViewSet):
     def favorite(self, request, pk):
         if request.method == "POST":
             recipe = get_object_or_404(Recipe, id=pk)
-            created = Favorite.objects.get_or_create(
+            obj, created = Favorite.objects.get_or_create(
                 user=request.user, recipe=recipe
             )
             if created:
@@ -81,14 +83,16 @@ class RecipeViewSet(ModelViewSet):
                 {"Ошибка": "Рецепт уже есть в избранном"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if request.method == "DELETE":
-            obj = get_object_or_404(
-                Favorite, user=request.user, recipe=recipe
-            ).delete()
-            if obj > 0:
-                return Response(status=status.HTTP_204_NO_CONTENT)
+
+        obj = Favorite.objects.filter(
+            user=request.user, recipe__id=pk
+        ).delete()
+
+        if obj[0] > 0:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
             return Response(
-                {"Ошибка": "Рецепт отсутствует в избранном"},
+                {"Ошибка": "Рецепта нет в избранном"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -100,7 +104,7 @@ class RecipeViewSet(ModelViewSet):
     def shopping_cart(self, request, pk):
         if request.method == "POST":
             recipe = get_object_or_404(Recipe, id=pk)
-            created = ShoppingCart.objects.get_or_create(
+            obj, created = ShoppingCart.objects.get_or_create(
                 user=request.user, recipe=recipe
             )
             if created:
@@ -112,14 +116,15 @@ class RecipeViewSet(ModelViewSet):
                 {"Ошибка": "Рецепт уже есть в списке покупок"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
-        if request.method == "DELETE":
-            obj = get_object_or_404(
-                ShoppingCart, user=request.user, recipe=recipe
-            ).delete()
-            if obj > 0:
-                return Response(status=status.HTTP_204_NO_CONTENT)
+        obj = ShoppingCart.objects.filter(
+            user=request.user, recipe__id=pk
+        ).delete()
+
+        if obj[0] > 0:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
             return Response(
-                {"Ошибка": "Рецепт отсутствует в списке покупок"},
+                {"Ошибка": "Рецепта нет в списке покупок"},
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -135,17 +140,22 @@ class RecipeViewSet(ModelViewSet):
             IngredientsInRecipe.objects.filter(
                 recipe__shopping_cart__user=user
             )
-            .values("ingredient__name", "ingredient__measurement_unit")
+            .values("ingredient__name", "ingredient__units")
             .annotate(amount=Sum("amount"))
         )
-        content = "Список покупок:\n\n"
+
+        return self.shopping_file(ingredients, user)
+
+    def shopping_file(ingredients, user):
+        content = f"Список покупок {user.get_full_name()}:\n\n"
         for ingredient in ingredients:
             name = ingredient.get("ingredient__name")
-            measurement_unit = ingredient.get("ingredient__measurement_unit")
+            units = ingredient.get("ingredient__units")
             amount = ingredient.get("amount")
-            content += f"{name} ({measurement_unit}) - {amount}\n"
+            content += f"{name} ({units}) - {amount}\n"
         response = HttpResponse(content, content_type="text/plain")
         response["Content-Disposition"] = 'attachment; filename="shoplist.txt"'
+
         return response
 
 
@@ -171,13 +181,15 @@ class UserViewSet(UserViewSet):
             Subscribe.objects.create(user=user, author=author)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-        if request.method == "DELETE":
-            get_object_or_404(
-                Subscribe, user=request.user, author=author
-            ).delete()
+        subscription = Subscribe.objects.filter(
+            user=user, author=author
+        ).delete()
+        if subscription[0] > 0:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
             return Response(
-                {"errors": "Вы отписаны от этого автора."},
-                status=status.HTTP_204_NO_CONTENT,
+                {"Ошибка": "Вы не были подписаны на этого пользователя"},
+                status=status.HTTP_400_BAD_REQUEST,
             )
 
     @action(detail=False, permission_classes=(IsAuthenticated,))

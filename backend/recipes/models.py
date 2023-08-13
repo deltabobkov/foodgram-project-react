@@ -1,8 +1,8 @@
-from core.models import CreatedModel
-
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
+
+from core.models import CreatedModel
 
 User = get_user_model()
 

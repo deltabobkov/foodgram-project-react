@@ -3,6 +3,7 @@ from django.contrib import admin
 from users.models import Subscribe, User
 
 
+@admin.register(User)
 class UserAdmin(admin.ModelAdmin):
     list_display = (
         "first_name",
@@ -20,6 +21,7 @@ class UserAdmin(admin.ModelAdmin):
     empty_value_display = "-пусто-"
 
 
+@admin.register(Subscribe)
 class SubscribeAdmin(admin.ModelAdmin):
     list_display = (
         "pk",
@@ -36,6 +38,7 @@ class SubscribeAdmin(admin.ModelAdmin):
     )
     empty_value_display = "-пусто-"
 
-
-admin.site.register(User, UserAdmin)
-admin.site.register(Subscribe, SubscribeAdmin)
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        queryset = queryset.select_related("user")
+        return queryset
