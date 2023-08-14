@@ -60,8 +60,8 @@ class IngredientsInRecipeAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         queryset = (
             super().get_queryset(request)
-            .select_related('recipe')
-            .prefetch_related('ingredient')
+            .select_related("recipe")
+            .prefetch_related("ingredient")
         )
         return queryset
 
@@ -76,7 +76,7 @@ class ShoppingCartAdmin(admin.ModelAdmin):
     def get_queryset(self, request):
         queryset = (
             super().get_queryset(request)
-            .select_related('user')
+            .select_related("user", "recipe")
         )
         return queryset
 
@@ -90,5 +90,5 @@ class FavoriteAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
-        queryset = queryset.select_related("user")
+        queryset = queryset.select_related("user", "recipe")
         return queryset

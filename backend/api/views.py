@@ -90,11 +90,10 @@ class RecipeViewSet(ModelViewSet):
 
         if obj[0] > 0:
             return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            return Response(
-                {"Ошибка": "Рецепта нет в избранном"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        return Response(
+            {"Ошибка": "Рецепта нет в избранном"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     @action(
         detail=True,
@@ -122,11 +121,10 @@ class RecipeViewSet(ModelViewSet):
 
         if obj[0] > 0:
             return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            return Response(
-                {"Ошибка": "Рецепта нет в списке покупок"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        return Response(
+            {"Ошибка": "Рецепта нет в списке покупок"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     @action(detail=False, permission_classes=(IsAuthenticated,))
     def download_shopping_cart(self, request):
@@ -144,7 +142,9 @@ class RecipeViewSet(ModelViewSet):
             .annotate(amount=Sum("amount"))
         )
 
-        return self.shopping_file(ingredients, user)
+        response = self.shopping_file(ingredients, user)
+        response["Content-Disposition"] = "attachment; filename='shoplist.txt'"
+        return response
 
     def shopping_file(ingredients, user):
         content = f"Список покупок {user.get_full_name()}:\n\n"
@@ -153,11 +153,8 @@ class RecipeViewSet(ModelViewSet):
             units = ingredient.get("ingredient__units")
             amount = ingredient.get("amount")
             content += f"{name} ({units}) - {amount}\n"
-        response = HttpResponse(content, content_type="text/plain")
-        response["Content-Disposition"] = 'attachment; filename="shoplist.txt"'
-
-        return response
-
+        return HttpResponse(content, content_type="text/plain")
+        
 
 class UserViewSet(UserViewSet):
     queryset = User.objects.all()
@@ -186,11 +183,10 @@ class UserViewSet(UserViewSet):
         ).delete()
         if subscription[0] > 0:
             return Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            return Response(
-                {"Ошибка": "Вы не были подписаны на этого пользователя"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+        return Response(
+            {"Ошибка": "Вы не были подписаны на этого пользователя"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     @action(detail=False, permission_classes=(IsAuthenticated,))
     def subscriptions(self, request):
