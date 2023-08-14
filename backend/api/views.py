@@ -154,7 +154,7 @@ class RecipeViewSet(ModelViewSet):
             amount = ingredient.get("amount")
             content += f"{name} ({units}) - {amount}\n"
         return HttpResponse(content, content_type="text/plain")
-        
+
 
 class UserViewSet(UserViewSet):
     queryset = User.objects.all()
