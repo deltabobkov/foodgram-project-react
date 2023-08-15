@@ -40,5 +40,5 @@ class SubscribeAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
-        queryset = queryset.select_related("user")
+        queryset = queryset.select_related("user", "follower")
         return queryset

@@ -59,7 +59,8 @@ class IngredientsInRecipeAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         queryset = (
-            super().get_queryset(request)
+            super()
+            .get_queryset(request)
             .select_related("recipe")
             .prefetch_related("ingredient")
         )
@@ -75,8 +76,7 @@ class ShoppingCartAdmin(admin.ModelAdmin):
 
     def get_queryset(self, request):
         queryset = (
-            super().get_queryset(request)
-            .select_related("user", "recipe")
+            super().get_queryset(request).select_related("user", "recipe")
         )
         return queryset
 

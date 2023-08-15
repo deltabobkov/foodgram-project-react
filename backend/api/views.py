@@ -46,10 +46,8 @@ class TagViewSet(ReadOnlyModelViewSet):
 
 
 class RecipeViewSet(ModelViewSet):
-    queryset = (
-        Recipe.objects.select_related("author")
-        .prefetch_related("tags", "ingredients")
-        .annotate(recipes_count=Count("id"))
+    queryset = Recipe.objects.select_related("author").prefetch_related(
+        "tags", "ingredients"
     )
     permission_classes = (IsOwnerOrAdminOrReadOnly,)
     filter_backends = (DjangoFilterBackend,)
@@ -68,7 +66,7 @@ class RecipeViewSet(ModelViewSet):
         methods=("post", "delete"),
         permission_classes=(IsAuthenticated,),
     )
-    def favorite(self, request, pk):
+    def get_favorite(self, request, pk):
         if request.method == "POST":
             recipe = get_object_or_404(Recipe, id=pk)
             obj, created = Favorite.objects.get_or_create(
@@ -100,7 +98,7 @@ class RecipeViewSet(ModelViewSet):
         methods=("post", "delete"),
         permission_classes=(IsAuthenticated,),
     )
-    def shopping_cart(self, request, pk):
+    def get_shopping_cart(self, request, pk):
         if request.method == "POST":
             recipe = get_object_or_404(Recipe, id=pk)
             obj, created = ShoppingCart.objects.get_or_create(
@@ -142,18 +140,21 @@ class RecipeViewSet(ModelViewSet):
             .annotate(amount=Sum("amount"))
         )
 
-        response = self.shopping_file(ingredients, user)
+        response = HttpResponse(
+            self.generate_shopping_file(ingredients, user),
+            content_type="text/plain",
+        )
         response["Content-Disposition"] = "attachment; filename='shoplist.txt'"
         return response
 
-    def shopping_file(ingredients, user):
+    def generate_shopping_file(ingredients, user):
         content = f"Список покупок {user.get_full_name()}:\n\n"
         for ingredient in ingredients:
             name = ingredient.get("ingredient__name")
             units = ingredient.get("ingredient__units")
             amount = ingredient.get("amount")
             content += f"{name} ({units}) - {amount}\n"
-        return HttpResponse(content, content_type="text/plain")
+        return content
 
 
 class UserViewSet(UserViewSet):
@@ -189,9 +190,11 @@ class UserViewSet(UserViewSet):
         )
 
     @action(detail=False, permission_classes=(IsAuthenticated,))
-    def subscriptions(self, request):
+    def get_subscriptions(self, request):
         user = request.user
-        queryset = User.objects.filter(subscribing__user=user)
+        queryset = User.objects.filter(following__user=user).annotate(
+            recipes_count=Count("recipes")
+        )
         paginated_queryset = self.paginate_queryset(queryset)
         serializer = SubscriptionsSerializer(
             paginated_queryset, many=True, context={"request": request}
