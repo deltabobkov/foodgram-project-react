@@ -11,25 +11,15 @@ from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 
 from recipes.models import (
-    Favorite,
-    Ingredient,
-    IngredientsInRecipe,
-    Recipe,
-    ShoppingCart,
-    Tag,
+    Favorite, Ingredient, IngredientsInRecipe, Recipe, ShoppingCart, Tag,
 )
 from users.models import Subscribe, User
 
-from .filters import RecipeFilter, IngredientFilter
+from .filters import IngredientFilter, RecipeFilter
 from .permissions import IsOwnerOrAdminOrReadOnly
 from .serializers import (
-    CreateRecipeSerializer,
-    GetRecipeSerializer,
-    IngredientSerializer,
-    RecipeSerializer,
-    SubscriptionsSerializer,
-    TagSerializer,
-    UserSerializer,
+    CreateRecipeSerializer, GetRecipeSerializer, IngredientSerializer,
+    RecipeSerializer, SubscriptionsSerializer, TagSerializer, UserSerializer,
 )
 
 
@@ -176,14 +166,14 @@ class UserViewSet(UserViewSet):
             paginated_queryset, many=True, context={"request": request}
         )
         return self.get_paginated_response(serializer.data)
-    
+
     @action(
         detail=True,
         methods=("post", "delete"),
         permission_classes=(IsAuthenticated,),
     )
     def subscribe(self, request, **kwargs):
-        author = get_object_or_404(User, pk=kwargs['id'])
+        author = get_object_or_404(User, pk=kwargs["id"])
 
         if request.method == "POST":
             serializer = SubscriptionsSerializer(

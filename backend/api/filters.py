@@ -4,16 +4,14 @@ from recipes.models import Ingredient, Recipe, Tag
 
 
 class IngredientFilter(FilterSet):
-    name = filters.CharFilter(
-        field_name='name', method='name_filter'
-    )
+    name = filters.CharFilter(field_name="name", method="name_filter")
 
     def name_filter(self, queryset, name, value):
         return queryset.filter(name__istartswith=value)
 
     class Meta:
         model = Ingredient
-        fields = ('name',)
+        fields = ("name",)
 
 
 class RecipeFilter(FilterSet):
@@ -24,11 +22,13 @@ class RecipeFilter(FilterSet):
     )
 
     is_favorited = filters.BooleanFilter(method="is_favorited_filter")
-    is_in_shopping_cart = filters.BooleanFilter(method="is_in_shopping_cart_filter")
+    is_in_shopping_cart = filters.BooleanFilter(
+        method="is_in_shopping_cart_filter"
+    )
 
     class Meta:
         model = Recipe
-        fields = ('tags', 'author', 'is_favorited', 'is_in_shopping_cart')
+        fields = ("tags", "author", "is_favorited", "is_in_shopping_cart")
 
     def is_favorited_filter(self, queryset, name, value):
         user = self.request.user
