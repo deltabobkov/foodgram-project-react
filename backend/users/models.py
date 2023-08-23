@@ -13,7 +13,7 @@ class User(AbstractUser):
 
 
 class Subscribe(models.Model):
-    following = models.ForeignKey(
+    author = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
         related_name="following",
@@ -29,6 +29,6 @@ class Subscribe(models.Model):
     class Meta:
         constraints = [
             models.UniqueConstraint(
-                fields=["user", "following"], name="uq_user_following"
+                fields=["user", "author"], name="uq_user_author"
             )
         ]

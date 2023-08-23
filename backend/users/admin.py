@@ -25,20 +25,20 @@ class UserAdmin(admin.ModelAdmin):
 class SubscribeAdmin(admin.ModelAdmin):
     list_display = (
         "pk",
-        "following",
+        "author",
         "user",
     )
     search_fields = (
-        "following",
+        "author",
         "user",
     )
     list_filter = (
-        "following",
+        "author",
         "user",
     )
     empty_value_display = "-пусто-"
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
-        queryset = queryset.select_related("user", "follower")
+        queryset = queryset.select_related("user", "author")
         return queryset

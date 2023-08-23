@@ -8,6 +8,7 @@ colorama==0.4.6
 cryptography==41.0.2
 defusedxml==0.7.1
 Django==4.2.3
+django-cors-headers==4.2.0
 django-extra-fields==3.0.2
 django-filter==23.2
 django-templated-mail==1.1.1
@@ -16,16 +17,17 @@ djangorestframework-simplejwt==5.2.2
 djoser==2.2.0
 drf-base64==2.0
 flake8==6.1.0
+gunicorn==21.2.0
 idna==3.4
 isort==5.12.0
-gunicorn==20.1.0
 mccabe==0.7.0
 mypy-extensions==1.0.0
 oauthlib==3.2.2
 packaging==23.1
 pathspec==0.11.1
+Pillow==10.0.0
 platformdirs==3.9.1
-psycopg2==2.9.6
+psycopg2-binary==2.9.6
 pycodestyle==2.11.0
 pycparser==2.21
 pyflakes==3.1.0

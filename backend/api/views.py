@@ -20,7 +20,7 @@ from recipes.models import (
 )
 from users.models import Subscribe, User
 
-from .filters import RecipeFilter
+from .filters import RecipeFilter, IngredientFilter
 from .permissions import IsOwnerOrAdminOrReadOnly
 from .serializers import (
     CreateRecipeSerializer,
@@ -34,12 +34,16 @@ from .serializers import (
 
 
 class IngredientViewSet(ReadOnlyModelViewSet):
+    pagination_class = None
     queryset = Ingredient.objects.all()
     serializer_class = IngredientSerializer
     permission_classes = (IsOwnerOrAdminOrReadOnly,)
+    filter_backends = (DjangoFilterBackend,)
+    filterset_class = IngredientFilter
 
 
 class TagViewSet(ReadOnlyModelViewSet):
+    pagination_class = None
     queryset = Tag.objects.all()
     serializer_class = TagSerializer
     permission_classes = (IsOwnerOrAdminOrReadOnly,)
@@ -66,7 +70,7 @@ class RecipeViewSet(ModelViewSet):
         methods=("post", "delete"),
         permission_classes=(IsAuthenticated,),
     )
-    def get_favorite(self, request, pk):
+    def favorite(self, request, pk):
         if request.method == "POST":
             recipe = get_object_or_404(Recipe, id=pk)
             obj, created = Favorite.objects.get_or_create(
@@ -98,7 +102,7 @@ class RecipeViewSet(ModelViewSet):
         methods=("post", "delete"),
         permission_classes=(IsAuthenticated,),
     )
-    def get_shopping_cart(self, request, pk):
+    def shopping_cart(self, request, pk):
         if request.method == "POST":
             recipe = get_object_or_404(Recipe, id=pk)
             obj, created = ShoppingCart.objects.get_or_create(
@@ -136,7 +140,7 @@ class RecipeViewSet(ModelViewSet):
             IngredientsInRecipe.objects.filter(
                 recipe__shopping_cart__user=user
             )
-            .values("ingredient__name", "ingredient__units")
+            .values("ingredient__name", "ingredient__measurement_unit")
             .annotate(amount=Sum("amount"))
         )
 
@@ -147,11 +151,11 @@ class RecipeViewSet(ModelViewSet):
         response["Content-Disposition"] = "attachment; filename='shoplist.txt'"
         return response
 
-    def generate_shopping_file(ingredients, user):
+    def generate_shopping_file(self, ingredients, user):
         content = f"Список покупок {user.get_full_name()}:\n\n"
         for ingredient in ingredients:
             name = ingredient.get("ingredient__name")
-            units = ingredient.get("ingredient__units")
+            units = ingredient.get("ingredient__measurement_unit")
             amount = ingredient.get("amount")
             content += f"{name} ({units}) - {amount}\n"
         return content
@@ -161,36 +165,8 @@ class UserViewSet(UserViewSet):
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
-    @action(
-        detail=True,
-        methods=("post", "delete"),
-        permission_classes=(IsAuthenticated,),
-    )
-    def subscribe(self, request, **kwargs):
-        user = request.user
-        author_id = self.kwargs.get("id")
-        author = get_object_or_404(User, id=author_id)
-
-        if request.method == "POST":
-            serializer = SubscriptionsSerializer(
-                author, data=request.data, context={"request": request}
-            )
-            serializer.is_valid(raise_exception=True)
-            Subscribe.objects.create(user=user, author=author)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-
-        subscription = Subscribe.objects.filter(
-            user=user, author=author
-        ).delete()
-        if subscription[0] > 0:
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        return Response(
-            {"Ошибка": "Вы не были подписаны на этого пользователя"},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
-
     @action(detail=False, permission_classes=(IsAuthenticated,))
-    def get_subscriptions(self, request):
+    def subscriptions(self, request):
         user = request.user
         queryset = User.objects.filter(following__user=user).annotate(
             recipes_count=Count("recipes")
@@ -200,3 +176,29 @@ class UserViewSet(UserViewSet):
             paginated_queryset, many=True, context={"request": request}
         )
         return self.get_paginated_response(serializer.data)
+    
+    @action(
+        detail=True,
+        methods=("post", "delete"),
+        permission_classes=(IsAuthenticated,),
+    )
+    def subscribe(self, request, **kwargs):
+        author = get_object_or_404(User, pk=kwargs['id'])
+
+        if request.method == "POST":
+            serializer = SubscriptionsSerializer(
+                author, data=request.data, context={"request": request}
+            )
+            serializer.is_valid(raise_exception=True)
+            Subscribe.objects.create(user=request.user, author=author)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        subscription = Subscribe.objects.filter(
+            user=request.user, author=author
+        ).delete()
+        if subscription[0] > 0:
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(
+            {"Ошибка": "Вы не были подписаны на этого пользователя"},
+            status=status.HTTP_400_BAD_REQUEST,
+        )

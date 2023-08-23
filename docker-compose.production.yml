@@ -1,0 +1,45 @@
+version: '3.5'
+
+volumes:
+  pg_data_production:
+  static_volume:
+  media_volume:
+
+services:
+
+  db:
+    image: postgres:13.10
+    env_file:
+      - .env
+    volumes:
+      - pg_data_production:/var/lib/postgresql/data/
+
+  backend:
+    image: pisets/foodgram_backend
+    restart: always
+    volumes:
+     - static_volume:/static/
+     - media_volume:/app/media
+    depends_on:
+      - db
+    env_file:
+      - .env
+
+  frontend:
+    image: pisets/foodgram_frontend
+    command: cp -r /app/build/. /frontend_static/
+    volumes:
+      - static_volume:/frontend_static
+
+  nginx:
+    image: pisets/foodgram_infra
+    ports:
+      - 8000:80
+    volumes:
+      #- ./nginx.conf:/etc/nginx/conf.d/default.conf
+      #- ../frontend/build:/usr/share/nginx/html/
+      #- ../docs/:/usr/share/nginx/html/api/docs/
+      - static_volume:/static/
+      - media_volume:/app/media/
+    depends_on:
+      - backend

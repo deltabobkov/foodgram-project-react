@@ -45,11 +45,12 @@ class UserSerializer(UserSerializer):
         )
 
     def get_is_subscribed(self, obj):
-        user = self.context.get("request").user
-        return (
-            not user.is_anonymous
-            and Subscribe.objects.filter(user=user, author=obj.id).exists()
-        )
+        request = self.context.get('request')
+        if request is None or request.user.is_anonymous:
+            return False
+        return Subscribe.objects.filter(
+            user=request.user, author=obj
+        ).exists()
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -64,12 +65,25 @@ class IngredientSerializer(serializers.ModelSerializer):
         fields = (
             "id",
             "name",
-            "units",
+            "measurement_unit",
         )
+
+
+class IngredientRecipeSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(source='ingredient.id', read_only=True)
+    name = serializers.CharField(source='ingredient.name', read_only=True)
+    measurement_unit = serializers.CharField(
+        source='ingredient.measurement_unit', read_only=True)
+    amount = serializers.IntegerField(source='ingredient_amount')
+
+    class Meta:
+        model = IngredientsInRecipe
+        fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
 class IngredientsInRecipeSerializer(serializers.ModelSerializer):
     id = serializers.IntegerField(write_only=True)
+    amount = serializers.IntegerField()
 
     class Meta:
         model = IngredientsInRecipe
@@ -81,7 +95,7 @@ class RecipeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Recipe
-        fields = ("id", "title", "image", "time")
+        fields = ("id", "name", "image", "cooking_time")
 
 
 class GetRecipeSerializer(serializers.ModelSerializer):
@@ -101,17 +115,17 @@ class GetRecipeSerializer(serializers.ModelSerializer):
             "ingredients",
             "is_favorited",
             "is_in_shopping_cart",
-            "title",
+            "name",
             "image",
-            "description",
-            "time",
+            "text",
+            "cooking_time",
         )
 
     def get_ingredients(self, obj):
         ingredients = obj.ingredients.values(
             "id",
             "name",
-            "units",
+            "measurement_unit",
             amount=F("ingredientsinrecipe__amount"),
         )
         return ingredients
@@ -148,22 +162,19 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
             "tags",
             "author",
             "ingredients",
-            "title",
+            "name",
             "image",
-            "description",
-            "time",
+            "text",
+            "cooking_time",
         )
 
     def validate_ingredients(self, value):
         ingredients = value
-
         if not ingredients:
             raise ValidationError(
                 {"ingredients": "Необходим хотя бы один ингридиент."}
             )
-
         ingredients_list = []
-
         for item in ingredients:
             ingredient = get_object_or_404(Ingredient, id=item["id"])
             if ingredient in ingredients_list:
@@ -179,59 +190,46 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
 
     def validate_tags(self, value):
         tags = value
-
         if not tags:
             raise ValidationError({"tags": "Выберите минимум 1 тег."})
-
         tags_list = []
-
         for tag in tags:
             if tag in tags_list:
                 raise ValidationError({"tags": "Повторный тег."})
             tags_list.append(tag)
         return value
 
-    def validate_time(self, value):
-        time = value
-
-        if time < 1:
-            raise ValidationError({"time": "Минимальное время - 1 минута"})
+    def validate_cooking_time(self, value):
+        cooking_time = value
+        if cooking_time < 1:
+            raise ValidationError({"cooking_time": "Минимальное время - 1 минута"})
         return value
 
+    def create_ingredients(self, ingredients, recipe):
+        IngredientsInRecipe.objects.bulk_create(
+            [IngredientsInRecipe(
+                ingredient=Ingredient.objects.get(id=ingredient['id']),
+                recipe=recipe,
+                amount=ingredient['amount']
+            ) for ingredient in ingredients]
+        )
+
     def create(self, validated_data):
-        tags = validated_data.pop("tags")
-        ingredients = validated_data.pop("ingredients")
+        tags = validated_data.pop('tags')
+        ingredients = validated_data.pop('ingredients')
         recipe = Recipe.objects.create(**validated_data)
         recipe.tags.set(tags)
-        IngredientsInRecipe.objects.bulk_create(
-            [
-                IngredientsInRecipe(
-                    ingredient=Ingredient.objects.get(id=ingredient["id"]),
-                    recipe=recipe,
-                    amount=ingredient["amount"],
-                )
-                for ingredient in ingredients
-            ]
-        )
+        self.create_ingredients(recipe=recipe, ingredients=ingredients)
         return recipe
 
     def update(self, instance, validated_data):
-        tags = validated_data.pop("tags")
-        ingredients = validated_data.pop("ingredients")
+        tags = validated_data.pop('tags')
+        ingredients = validated_data.pop('ingredients')
         instance = super().update(instance, validated_data)
         instance.tags.clear()
         instance.tags.set(tags)
         instance.ingredients.clear()
-        IngredientsInRecipe.objects.bulk_create(
-            [
-                IngredientsInRecipe(
-                    ingredient=Ingredient.objects.get(id=ingredient["id"]),
-                    recipe=instance,
-                    amount=ingredient["amount"],
-                )
-                for ingredient in ingredients
-            ]
-        )
+        self.create_ingredients(recipe=instance, ingredients=ingredients)
         instance.save()
         return instance
 
@@ -243,7 +241,7 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
 
 class SubscriptionsSerializer(UserSerializer):
     recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.IntegerField()
+    recipes_count = serializers.IntegerField(default=0)
 
     class Meta:
         model = User
