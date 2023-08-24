@@ -7,9 +7,10 @@ SECRET_KEY = os.getenv("SECRET_KEY", "key")
 
 DEBUG = os.getenv("DEBUG") == "True"
 
-HOSTS: str = os.getenv("HOSTS", "127.0.0.1, localhost")
+HOSTS = os.getenv("HOSTS", "127.0.0.1, localhost")
 ALLOWED_HOSTS = HOSTS.split(",")
-CSRF_TRUSTED_ORIGINS = ["https://pisets.ddns.net"]
+CSRF = os.getenv("CSRF", "https://127.0.0.1")
+CSRF_TRUSTED_ORIGINS = CSRF.split(",")
 
 INSTALLED_APPS = [
     "django.contrib.admin",

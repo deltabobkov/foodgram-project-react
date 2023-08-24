@@ -3,7 +3,7 @@ version: '3.5'
 volumes:
   pg_data:
   static:
-  #media:
+  media:
 
 services:
 
@@ -19,7 +19,7 @@ services:
     restart: always
     volumes:
      - static:/static/
-    # - media:/app/media/
+     - media:/app/media/
     depends_on:
       - db
     env_file:
@@ -39,6 +39,6 @@ services:
       - ../frontend/build:/usr/share/nginx/html/
       - ../docs/:/usr/share/nginx/html/api/docs/
       - static:/static/
-    #  - media:/var/html/media/
+      - media:/app/media/
     depends_on:
       - backend
