@@ -2,4 +2,4 @@
 python manage.py migrate --noinput
 python manage.py collectstatic 
 cp -rf /app/static/. /static/static/ 
-gunicorn --bind 0.0.0.0:8000 foodgram_backend.wsgi
+gunicorn --bind 0.0.0.0:8000 foodgram.wsgi
