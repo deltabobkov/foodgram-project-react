@@ -130,3 +130,7 @@ dmypy.json
 
 # .idea
 .idea
+
+# lint
+.sort.cfg
+pyproject.toml
