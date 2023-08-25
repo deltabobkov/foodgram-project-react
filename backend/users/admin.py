@@ -36,10 +36,6 @@ class SubscribeAdmin(admin.ModelAdmin):
     )
     empty_value_display = "-пусто-"
 
-    class Meta:
-        verbose_name = "Подписка"
-        verbose_name_plural = "Подписки"
-
     def get_queryset(self, request):
         queryset = super().get_queryset(request)
         queryset = queryset.select_related("user", "author")
