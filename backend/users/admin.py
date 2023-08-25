@@ -15,8 +15,7 @@ class UserAdmin(admin.ModelAdmin):
         "last_name",
     )
     list_filter = (
-        "first_name",
-        "last_name",
+        "email",
     )
     empty_value_display = "-пусто-"
 
@@ -24,7 +23,6 @@ class UserAdmin(admin.ModelAdmin):
 @admin.register(Subscribe)
 class SubscribeAdmin(admin.ModelAdmin):
     list_display = (
-        "pk",
         "author",
         "user",
     )
@@ -37,6 +35,10 @@ class SubscribeAdmin(admin.ModelAdmin):
         "user",
     )
     empty_value_display = "-пусто-"
+
+    class Meta:
+        verbose_name = "Подписка"
+        verbose_name_plural = "Подписки"
 
     def get_queryset(self, request):
         queryset = super().get_queryset(request)

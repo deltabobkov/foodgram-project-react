@@ -9,8 +9,8 @@ from .models import (
 @admin.register(Tag)
 class TagAdmin(admin.ModelAdmin):
     list_display = ("pk", "name", "color", "slug")
+    list_display_links = ("name",)
     search_fields = ("name",)
-    list_editable = ("name",)
     list_filter = ("name", "color", "slug")
     empty_value_display = "-пусто-"
 
@@ -18,21 +18,20 @@ class TagAdmin(admin.ModelAdmin):
 @admin.register(Ingredient)
 class IngredientAdmin(admin.ModelAdmin):
     list_display = ("pk", "name", "measurement_unit")
+    list_display_links = ("name",)
     search_fields = ("name",)
-    list_editable = ("name",)
-    list_filter = ("name",)
     empty_value_display = "-пусто-"
 
 
 @admin.register(Recipe)
 class RecipeAdmin(admin.ModelAdmin):
     list_display = ("pk", "name", "author", "text", "favorites")
+    list_display_links = ("name",)
     search_fields = (
         "author__username",
         "name",
         "author__email",
     )
-    list_editable = ("name", "text")
     list_filter = ("name", "author", "tags")
     empty_value_display = "-пусто-"
 
@@ -46,13 +45,13 @@ class RecipeAdmin(admin.ModelAdmin):
         return queryset
 
     def favorites(self, obj):
-        return obj.favorites.count()
+        return obj.favorited
 
 
 @admin.register(IngredientsInRecipe)
 class IngredientsInRecipeAdmin(admin.ModelAdmin):
     list_display = ("pk", "recipe", "ingredient", "amount")
-    list_editable = ("recipe", "ingredient")
+    list_display_links = ("recipe", "ingredient")
     empty_value_display = "-пусто-"
 
     def get_queryset(self, request):
@@ -68,8 +67,8 @@ class IngredientsInRecipeAdmin(admin.ModelAdmin):
 @admin.register(ShoppingCart)
 class ShoppingCartAdmin(admin.ModelAdmin):
     list_display = ("pk", "user", "recipe")
+    list_display_links = ("user", "recipe")
     search_fields = ("user__username", "user__email", "recipe__name")
-    list_editable = ("user", "recipe")
     empty_value_display = "-пусто-"
 
     def get_queryset(self, request):
@@ -82,8 +81,8 @@ class ShoppingCartAdmin(admin.ModelAdmin):
 @admin.register(Favorite)
 class FavoriteAdmin(admin.ModelAdmin):
     list_display = ("pk", "user", "recipe")
+    list_display_links = ("user", "recipe")
     search_fields = ("user__username", "user__email", "recipe__name")
-    list_editable = ("user", "recipe")
     empty_value_display = "-пусто-"
 
     def get_queryset(self, request):
