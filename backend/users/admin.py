@@ -14,9 +14,6 @@ class UserAdmin(admin.ModelAdmin):
         "first_name",
         "last_name",
     )
-    list_filter = (
-        "email",
-    )
     empty_value_display = "-пусто-"
 
 
@@ -27,10 +24,6 @@ class SubscribeAdmin(admin.ModelAdmin):
         "user",
     )
     search_fields = (
-        "author",
-        "user",
-    )
-    list_filter = (
         "author",
         "user",
     )

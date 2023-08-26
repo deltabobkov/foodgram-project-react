@@ -11,7 +11,7 @@ class TagAdmin(admin.ModelAdmin):
     list_display = ("pk", "name", "color", "slug")
     list_display_links = ("name",)
     search_fields = ("name",)
-    list_filter = ("name", "color", "slug")
+    list_filter = ("color",)
     empty_value_display = "-пусто-"
 
 
@@ -32,7 +32,7 @@ class RecipeAdmin(admin.ModelAdmin):
         "name",
         "author__email",
     )
-    list_filter = ("name", "author", "tags")
+    list_filter = ("author", "tags")
     empty_value_display = "-пусто-"
 
     def get_queryset(self, request):
